@@ -1,0 +1,644 @@
+ <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击气球小游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        header {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #FFD700, #FF8C00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .score-container, .time-container {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .score, .time {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        
+        .balloon {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: inset -10px -10px 10px rgba(0, 0, 0, 0.2), 
+                        0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .balloon:after {
+            content: "";
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 15px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .balloon:hover {
+            transform: scale(1.05);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: linear-gradient(to right, #FF416C, #FF4B2B);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button:disabled {
+            background: linear-gradient(to right, #999, #777);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .instructions {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .instructions h2 {
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            border: 2px solid #FFD700;
+        }
+        
+        .game-over h2 {
+            font-size: 3rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+        
+        .final-score {
+            font-size: 4rem;
+            color: #FF416C;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .game-area {
+                height: 500px;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎈 点击气球小游戏 🎈</h1>
+            <p>在60秒内点击尽可能多的气球！</p>
+        </header>
+        
+        <div class="game-info">
+            <div class="score-container">
+                <div>得分</div>
+                <div class="score">0</div>
+            </div>
+            <div class="time-container">
+                <div>剩余时间</div>
+                <div class="time">60</div>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <!-- 气球将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">开始游戏</button>
+            <button id="pauseBtn" disabled>暂停</button>
+            <button id="resetBtn">重置</button>
+        </div>
+        
+        <div class="instructions">
+            <h2>游戏说明</h2>
+            <ul>
+                <li>点击"开始游戏"按钮开始游戏</li>
+                <li>点击屏幕上出现的彩色气球获得分数</li>
+                <li>每个气球的分值根据其大小和颜色不同：红色(10分)，蓝色(15分)，绿色(20分)，黄色(25分)</li>
+                <li>气球越小，得分越高（小气球: x2，中气球: x1.5，大气球: x1）</li>
+                <li>游戏时间60秒，时间结束后显示最终得分</li>
+                <li>使用"暂停"按钮可以暂停游戏，"重置"按钮可以重新开始</li>
+            </ul>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>游戏结束!</h2>
+            <p>你的最终得分是:</p>
+            <div class="final-score" id="finalScore">0</div>
+            <p id="message"></p>
+            <button id="restartBtn">再玩一次</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏变量
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = false;
+        let gameTimer;
+        let balloonInterval;
+        let balloons = [];
+        
+        // DOM元素
+        const gameArea = document.getElementById('gameArea');
+        const scoreElement = document.querySelector('.score');
+        const timeElement = document.querySelector('.time');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const gameOverScreen = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+        const messageElement = document.getElementById('message');
+        
+        // 气球颜色和对应的基础分数
+        const balloonColors = [
+            {color: '#FF416C', baseScore: 10}, // 红色
+            {color: '#4A90E2', baseScore: 15}, // 蓝色
+            {color: '#50C878', baseScore: 20}, // 绿色
+            {color: '#FFD700', baseScore: 25}  // 黄色
+        ];
+        
+        // 气球大小和对应的倍数
+        const balloonSizes = [
+            {size: 40, multiplier: 2, label: '小'},   // 小气球 x2
+            {size: 60, multiplier: 1.5, label: '中'}, // 中气球 x1.5
+            {size: 80, multiplier: 1, label: '大'}    // 大气球 x1
+        ];
+        
+        // 开始游戏
+        startBtn.addEventListener('click', startGame);
+        
+        // 暂停游戏
+        pauseBtn.addEventListener('click', function() {
+            if (gameActive) {
+                pauseGame();
+                this.textContent = '继续';
+            } else {
+                resumeGame();
+                this.textContent = '暂停';
+            }
+        });
+        
+        // 重置游戏
+        resetBtn.addEventListener('click', resetGame);
+        
+        // 重新开始游戏
+        restartBtn.addEventListener('click', function() {
+            gameOverScreen.style.display = 'none';
+            resetGame();
+            startGame();
+        });
+        
+        // 开始游戏函数
+        function startGame() {
+            if (gameActive) return;
+            
+            gameActive = true;
+            score = 0;
+            timeLeft = 60;
+            
+            updateScore();
+            updateTimer();
+            
+            // 禁用开始按钮，启用暂停按钮
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            
+            // 清除所有现有气球
+            clearBalloons();
+            
+            // 开始游戏计时器
+            gameTimer = setInterval(updateGame, 1000);
+            
+            // 开始生成气球
+            balloonInterval = setInterval(createBalloon, 800);
+            
+            // 创建初始气球
+            for (let i = 0; i < 5; i++) {
+                setTimeout(createBalloon, i * 300);
+            }
+        }
+        
+        // 暂停游戏函数
+        function pauseGame() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            clearInterval(balloonInterval);
+            
+            // 暂停所有气球的动画
+            document.querySelectorAll('.balloon').forEach(balloon => {
+                balloon.style.animationPlayState = 'paused';
+            });
+        }
+        
+        // 继续游戏函数
+        function resumeGame() {
+            gameActive = true;
+            
+            // 恢复游戏计时器
+            gameTimer = setInterval(updateGame, 1000);
+            
+            // 恢复生成气球
+            balloonInterval = setInterval(createBalloon, 800);
+            
+            // 恢复所有气球的动画
+            document.querySelectorAll('.balloon').forEach(balloon => {
+                balloon.style.animationPlayState = 'running';
+            });
+        }
+        
+        // 重置游戏函数
+        function resetGame() {
+            gameActive = false;
+            
+            // 清除所有计时器
+            clearInterval(gameTimer);
+            clearInterval(balloonInterval);
+            
+            // 重置分数和时间
+            score = 0;
+            timeLeft = 60;
+            
+            updateScore();
+            updateTimer();
+            
+            // 清除所有气球
+            clearBalloons();
+            
+            // 重置按钮状态
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = '暂停';
+            
+            // 隐藏游戏结束画面
+            gameOverScreen.style.display = 'none';
+        }
+        
+        // 更新游戏状态
+        function updateGame() {
+            timeLeft--;
+            updateTimer();
+            
+            // 检查游戏是否结束
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+        
+        // 创建气球
+        function createBalloon() {
+            if (!gameActive) return;
+            
+            // 随机选择气球颜色和大小
+            const colorIndex = Math.floor(Math.random() * balloonColors.length);
+            const sizeIndex = Math.floor(Math.random() * balloonSizes.length);
+            
+            const colorInfo = balloonColors[colorIndex];
+            const sizeInfo = balloonSizes[sizeIndex];
+            
+            // 创建气球元素
+            const balloon = document.createElement('div');
+            balloon.className = 'balloon';
+            
+            // 设置气球样式
+            const size = sizeInfo.size;
+            balloon.style.width = `${size}px`;
+            balloon.style.height = `${size}px`;
+            balloon.style.backgroundColor = colorInfo.color;
+            balloon.style.left = `${Math.random() * (gameArea.offsetWidth - size)}px`;
+            balloon.style.bottom = `-${size}px`;
+            
+            // 添加气球数据属性
+            balloon.dataset.score = colorInfo.baseScore * sizeInfo.multiplier;
+            balloon.dataset.size = sizeInfo.label;
+            
+            // 添加气球浮动动画
+            const duration = 5 + Math.random() * 10; // 5-15秒
+            balloon.style.animation = `float ${duration}s linear forwards`;
+            
+            // 添加点击事件
+            balloon.addEventListener('click', popBalloon);
+            
+            // 添加到游戏区域
+            gameArea.appendChild(balloon);
+            
+            // 保存气球引用
+            balloons.push(balloon);
+            
+            // 气球到达顶部后自动移除
+            setTimeout(() => {
+                if (balloon.parentNode) {
+                    balloon.remove();
+                    // 从数组中移除
+                    const index = balloons.indexOf(balloon);
+                    if (index > -1) {
+                        balloons.splice(index, 1);
+                    }
+                }
+            }, duration * 1000);
+        }
+        
+        // 点击气球
+        function popBalloon(e) {
+            if (!gameActive) return;
+            
+            const balloon = e.target;
+            const points = parseInt(balloon.dataset.score);
+            const size = balloon.dataset.size;
+            
+            // 增加分数
+            score += points;
+            updateScore();
+            
+            // 创建分数显示效果
+            createScorePopup(points, balloon);
+            
+            // 移除气球
+            balloon.remove();
+            
+            // 从数组中移除
+            const index = balloons.indexOf(balloon);
+            if (index > -1) {
+                balloons.splice(index, 1);
+            }
+            
+            // 播放气球爆炸声音效果（使用音频API，但这里简单模拟）
+            playPopSound();
+        }
+        
+        // 创建分数弹出效果
+        function createScorePopup(points, balloon) {
+            const popup = document.createElement('div');
+            popup.textContent = `+${points}`;
+            popup.style.position = 'absolute';
+            popup.style.color = '#FFD700';
+            popup.style.fontWeight = 'bold';
+            popup.style.fontSize = '24px';
+            popup.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+            popup.style.left = `${balloon.offsetLeft + balloon.offsetWidth/2}px`;
+            popup.style.top = `${balloon.offsetTop}px`;
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.pointerEvents = 'none';
+            popup.style.zIndex = '10';
+            
+            gameArea.appendChild(popup);
+            
+            // 动画效果
+            let opacity = 1;
+            let posY = 0;
+            const animation = setInterval(() => {
+                opacity -= 0.05;
+                posY -= 2;
+                popup.style.opacity = opacity;
+                popup.style.top = `${balloon.offsetTop + posY}px`;
+                
+                if (opacity <= 0) {
+                    clearInterval(animation);
+                    popup.remove();
+                }
+            }, 50);
+        }
+        
+        // 模拟气球爆炸声音
+        function playPopSound() {
+            // 在实际应用中，这里会播放音频文件
+            // 由于这是一个简单示例，我们只模拟声音效果
+            try {
+                // 创建音频上下文
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                // 如果音频上下文不可用，静默失败
+                console.log("音频API不可用");
+            }
+        }
+        
+        // 清除所有气球
+        function clearBalloons() {
+            // 从DOM中移除所有气球
+            document.querySelectorAll('.balloon').forEach(balloon => {
+                balloon.remove();
+            });
+            
+            // 清空气球数组
+            balloons = [];
+        }
+        
+        // 更新分数显示
+        function updateScore() {
+            scoreElement.textContent = score;
+        }
+        
+        // 更新计时器显示
+        function updateTimer() {
+            timeElement.textContent = timeLeft;
+            
+            // 当时间少于10秒时改变颜色
+            if (timeLeft <= 10) {
+                timeElement.style.color = '#FF416C';
+                timeElement.classList.add('floating');
+            } else {
+                timeElement.style.color = '#FFD700';
+                timeElement.classList.remove('floating');
+            }
+        }
+        
+        // 结束游戏
+        function endGame() {
+            gameActive = false;
+            
+            // 清除所有计时器
+            clearInterval(gameTimer);
+            clearInterval(balloonInterval);
+            
+            // 清除所有气球
+            clearBalloons();
+            
+            // 更新最终分数
+            finalScoreElement.textContent = score;
+            
+            // 根据分数显示不同消息
+            let message = "";
+            if (score >= 1000) {
+                message = "太厉害了！你是气球点击大师！🎉";
+            } else if (score >= 500) {
+                message = "干得漂亮！你的反应速度很快！⚡";
+            } else if (score >= 200) {
+                message = "不错！继续练习会更棒！👍";
+            } else {
+                message = "继续努力，下次会更好！💪";
+            }
+            
+            messageElement.textContent = message;
+            
+            // 显示游戏结束画面
+            gameOverScreen.style.display = 'block';
+            
+            // 重置按钮状态
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = '暂停';
+        }
+        
+        // 初始化游戏
+        resetGame();
+    </script>
+</body>
+</html>
